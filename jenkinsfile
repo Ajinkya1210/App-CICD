@@ -1,0 +1,34 @@
+pipeline {
+    agent { label 'pull-node' }
+
+    stages {
+
+        stage('Clone Code') {
+            steps {
+                deleteDir()
+                git 'https://github.com/Ajinkya1210/App-CICD.git'
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                docker build --no-cache -t backend ./backend
+                docker build --no-cache -t frontend ./frontend
+                '''
+            }
+        }
+
+        stage('Deploy Containers') {
+            steps {
+                sh '''
+                docker stop $(docker ps -aq) || true
+                docker rm $(docker ps -aq) || true
+
+                docker run -d -p 3000:3000 backend
+                docker run -d -p 80:80 frontend
+                '''
+            }
+        }
+    }
+}
